@@ -2,7 +2,9 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Application
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -10,6 +12,7 @@ import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.common.api.ApiException
@@ -29,11 +32,17 @@ import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
 
-class SelectLocationFragment : BaseFragment() {
+class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
+    private lateinit var googleMap : GoogleMap
+
+    companion object{
+       const  val REQUEST_CODE = 10
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -47,9 +56,12 @@ class SelectLocationFragment : BaseFragment() {
         setHasOptionsMenu(true)
         setDisplayHomeAsUpEnabled(true)
 
-//        TODO: add the map setup implementation
+        //instantiate the SupportMapFragment and use the getMapAsync() method initialize the map
+        val mapFragment = childFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+
+
 //        TODO: zoom to the user location after taking his permission
-//        TODO: add style to the map
 //        TODO: put a marker to location that the user selected
 
 
@@ -87,5 +99,69 @@ class SelectLocationFragment : BaseFragment() {
         else -> super.onOptionsItemSelected(item)
     }
 
+    override fun onMapReady(map: GoogleMap) {
+        Log.i("myMap","On Map Ready Called")
+        googleMap = map
+        val homeLatLng = LatLng(28.650292850605265, 77.20170328080982)
+        // map?.addMarker(MarkerOptions().position(homeLatLng))
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(homeLatLng,15f))
+            setLongClickListener()
+        setMapStyle()
+
+        if (ActivityCompat.checkSelfPermission(requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            val permission = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION ,Manifest.permission.ACCESS_COARSE_LOCATION)
+            ActivityCompat.requestPermissions(requireActivity(),permission,REQUEST_CODE)
+            return
+        }
+        enableMyLocation()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun enableMyLocation(){
+        googleMap.isMyLocationEnabled = true
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+
+        if(REQUEST_CODE == requestCode)
+        {
+            if(grantResults.size>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED && grantResults[1] ==PackageManager.PERMISSION_GRANTED)
+            {
+                enableMyLocation()
+            }
+        }
+
+    }
+
+    private fun setLongClickListener()
+    {
+        googleMap.setOnMapLongClickListener {
+            googleMap.addMarker(MarkerOptions()
+                .position(it)
+            )
+        }
+    }
+
+    private fun setMapStyle()
+    {
+        try {
+            val success = googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(activity,R.raw.map_style))
+            if(!success)
+            {
+                Log.e("myMap","Style parsing Failed.")
+            }
+        }catch (e :Resources.NotFoundException)
+        {
+            Log.e("myMap","can't find the style. Error : ",e)
+        }
+    }
 
 }
