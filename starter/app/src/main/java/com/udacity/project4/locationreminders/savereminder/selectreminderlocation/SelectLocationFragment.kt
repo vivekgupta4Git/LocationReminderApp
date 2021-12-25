@@ -3,40 +3,26 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.Application
-import android.content.DialogInterface
-import android.content.Intent
-import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import androidx.fragment.app.DialogFragment
-import androidx.lifecycle.Observer
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
-import com.udacity.project4.locationreminders.savereminder.SaveReminderFragmentDirections
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
-import com.udacity.project4.utils.setTitle
-import kotlinx.android.synthetic.main.fragment_save_reminder.*
 import org.koin.android.ext.android.inject
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
@@ -72,27 +58,18 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
        return binding.root
     }
 
+    /*
+    Setting the selected Poi to viewModel and navigating back.
+     */
     private fun onLocationSelected(selectedPoi : PointOfInterest) {
-        //create dialog box confirming user selected poi
-        val dialogBuilder = MaterialAlertDialogBuilder(requireContext())
-        dialogBuilder.setTitle("Save Reminder")
-        dialogBuilder.setMessage("Do you want to Save Reminder to the selected Poi ${selectedPoi.name}?")
-        dialogBuilder.setPositiveButton("Ok") { dialogInterface, i ->
-            //We need to close the selectedLocationfragment or move to back stack  fragment
-            Log.i("myMap","User Selected : ${selectedPoi.name}")
-            dialogInterface.dismiss()
-           _viewModel.setPoi(selectedPoi)
-            _viewModel.navigationCommand.value =
-                NavigationCommand.To(SelectLocationFragmentDirections.actionSelectLocationFragmentToSaveReminderFragment())
-        }
-        dialogBuilder.setNegativeButton("Cancel"){
-                dialogInterface, i ->
-            dialogInterface.dismiss()
-        }
+        Snackbar.make(requireView(), "Save Location", Snackbar.LENGTH_INDEFINITE)
+            .setAction("Save") {
+                _viewModel.setPoi(selectedPoi)
+                _viewModel.navigationCommand.value =
+                    NavigationCommand.To(SelectLocationFragmentDirections.actionSelectLocationFragmentToSaveReminderFragment())
+            }.show()
 
-        dialogBuilder.show()
     }
-
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.map_options, menu)
