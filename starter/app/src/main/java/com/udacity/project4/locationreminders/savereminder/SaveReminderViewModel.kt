@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.savereminder
 
 import android.app.Application
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.PointOfInterest
@@ -17,18 +18,34 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     val reminderTitle = MutableLiveData<String>()
     val reminderDescription = MutableLiveData<String>()
     val reminderSelectedLocationStr = MutableLiveData<String>()
-    val selectedPOI = MutableLiveData<PointOfInterest>()
+    private var _selectedPOI = MutableLiveData<PointOfInterest>()
+    val selectedPoi : LiveData<PointOfInterest>
+    get() = _selectedPOI
+
     val latitude = MutableLiveData<Double>()
     val longitude = MutableLiveData<Double>()
+
+
+    /*
+    set the poi, title of poi to textview , latitude and longitude
+     */
+    fun setPoi(poi :PointOfInterest)
+    {
+        _selectedPOI.value = poi
+        latitude.value = poi.latLng.latitude
+        longitude.value = poi.latLng.longitude
+        reminderSelectedLocationStr.value = poi.name
+    }
 
     /**
      * Clear the live data objects to start fresh next time the view model gets called
      */
+
     fun onClear() {
         reminderTitle.value = null
         reminderDescription.value = null
         reminderSelectedLocationStr.value = null
-        selectedPOI.value = null
+        _selectedPOI.value = null
         latitude.value = null
         longitude.value = null
     }
