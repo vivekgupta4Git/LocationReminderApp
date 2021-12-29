@@ -10,6 +10,7 @@ android {
     buildToolsVersion "29.0.2"
 
     defaultConfig {
+        multiDexEnabled true
         applicationId "com.udacity.project4"
         minSdkVersion rootProject.minSdkVersion
         targetSdkVersion rootProject.targetSdkVersion
@@ -31,6 +32,11 @@ android {
         returnDefaultValues = true
     }
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     //dataBinding {
     //    enabled = true
     //    enabledForTests = true
@@ -46,6 +52,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$appCompatVersion"
     implementation "androidx.legacy:legacy-support-v4:$androidXLegacySupport"
     implementation "androidx.annotation:annotation:$androidXAnnotations"
+    implementation 'com.android.support:multidex:1.0.3'
 
     implementation "androidx.cardview:cardview:$cardVersion"
     implementation "com.google.android.material:material:$materialVersion"
@@ -54,6 +61,7 @@ dependencies {
 
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation platform('com.google.firebase:firebase-bom:29.0.3')
+    implementation 'com.firebaseui:firebase-ui-auth:5.0.0'
 
     // Architecture Components
     //Navigation dependencies

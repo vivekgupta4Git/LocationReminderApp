@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.savereminder
 
 import android.app.Application
+import android.text.BoringLayout
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -15,6 +16,26 @@ import kotlinx.coroutines.launch
 
 class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSource) :
     BaseViewModel(app) {
+    /*
+    Once the save details is validated we want to start geofencing after it
+    we want to enable it from viewModel, so we need to create a livedata variable
+    which will be enabled once data is validated and it will be observed in fragment
+    once the value is true , start geofence otherwise not.
+     */
+
+    private var _enableGeofence = MutableLiveData<Boolean>()
+    val enableGeofence : LiveData<Boolean>
+    get() = _enableGeofence
+
+
+    fun onceEnabledDisableAgainGeofence(){
+        _enableGeofence.value= false
+    }
+
+    init {
+        _enableGeofence.value = false
+    }
+
     val reminderTitle = MutableLiveData<String>()
     val reminderDescription = MutableLiveData<String>()
     val reminderSelectedLocationStr = MutableLiveData<String>()
@@ -35,6 +56,7 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
         latitude.value = poi.latLng.latitude
         longitude.value = poi.latLng.longitude
         reminderSelectedLocationStr.value = poi.name
+
     }
 
     /**
@@ -56,8 +78,20 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     fun validateAndSaveReminder(reminderData: ReminderDataItem) {
         if (validateEnteredData(reminderData)) {
             saveReminder(reminderData)
+
+
+            navigationCommand.value = NavigationCommand
+                .To(SaveReminderFragmentDirections
+                    .actionSaveReminderFragmentToReminderListFragment())
+
+            //tell fragment that everything is ok you can start geofencing
+                _enableGeofence.value =true
         }
+
     }
+
+
+
 
     /**
      * Save the reminder to the data source

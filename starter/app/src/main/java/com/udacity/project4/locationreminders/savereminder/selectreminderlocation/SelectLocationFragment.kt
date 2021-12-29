@@ -35,7 +35,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     companion object{
        const  val REQUEST_CODE = 10
-        const val ZOOM_LEVEL = 15f
+        const val ZOOM_LEVEL = 17f
     }
 
 
@@ -65,8 +65,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         Snackbar.make(requireView(), "Save Location", Snackbar.LENGTH_INDEFINITE)
             .setAction("Save") {
                 _viewModel.setPoi(selectedPoi)
-                _viewModel.navigationCommand.value =
-                    NavigationCommand.To(SelectLocationFragmentDirections.actionSelectLocationFragmentToSaveReminderFragment())
+                _viewModel.navigationCommand.postValue(
+                    NavigationCommand.Back
+                )
+              //  fragmentManager?.popBackStack()
             }.show()
 
     }
@@ -76,17 +78,21 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        // TODO: Change the map type based on the user's selection.
         R.id.normal_map -> {
+            googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
             true
         }
         R.id.hybrid_map -> {
+            googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
             true
         }
         R.id.satellite_map -> {
+            googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
+
             true
         }
         R.id.terrain_map -> {
+            googleMap.mapType = GoogleMap.MAP_TYPE_TERRAIN
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -94,7 +100,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
-       // setLongClickListener()
         setMapStyle()
 
         if (ActivityCompat.checkSelfPermission(requireContext(),
@@ -143,16 +148,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     }
 
-    private fun setLongClickListener()
-    {
-        googleMap.setOnMapLongClickListener {
-            googleMap.addMarker(MarkerOptions()
-                .position(it)
 
-
-            )
-        }
-    }
 
 
     private fun setPoiClickListener() {
