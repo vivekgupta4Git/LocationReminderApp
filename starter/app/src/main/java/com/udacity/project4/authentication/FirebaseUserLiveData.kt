@@ -8,7 +8,7 @@ class FirebaseUserLiveData : LiveData<FirebaseUser?>() {
 
     private val firebaseAuth = FirebaseAuth.getInstance()
 
-    private val authStateListener = FirebaseAuth.AuthStateListener {
+     val authStateListener = FirebaseAuth.AuthStateListener {
         authFirebase-> value = authFirebase.currentUser
     }
 

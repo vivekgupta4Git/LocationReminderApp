@@ -13,12 +13,14 @@ import android.util.Log
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.NavHostFragment
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.common.api.ResolvableApiException
@@ -29,8 +31,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
-import com.udacity.project4.locationreminders.reminderslist.ReminderListFragment
-import kotlinx.android.synthetic.main.activity_reminders.*
 
 /**
  * The RemindersActivity that holds the reminders fragments
@@ -49,11 +49,19 @@ class RemindersActivity : AppCompatActivity() {
         setContentView(R.layout.activity_reminders)
 
          layout = findViewById(R.id.constraintLayout)
-         Log.i("myTag","Firebase user : ${FirebaseAuth.getInstance().currentUser?.displayName}")
-       fragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+         Log.i(TAG,"Firebase user : ${FirebaseAuth.getInstance().currentUser?.displayName}")
 
-requestForegroundAndBackgroundPermissions()
+
+           fragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+
+
+        requestForegroundAndBackgroundPermissions()
+
     }
+
+
+
+
 
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -193,5 +201,6 @@ requestForegroundAndBackgroundPermissions()
         val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 1
         val REQUEST_FOREGROUND_ONLY_PERMISSION_REQUEST_CODE  = 2
         val REQUEST_TURN_DEVICE_LOCATION_ON = 3
+        private const val TAG = "myTag"
     }
 }

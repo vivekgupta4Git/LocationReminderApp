@@ -1,21 +1,78 @@
 package com.udacity.project4.locationreminders.savereminder
 
+import android.annotation.SuppressLint
 import android.app.Application
+import android.app.PendingIntent
+import android.content.Intent
 import android.text.BoringLayout
+import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingClient
+import com.google.android.gms.location.GeofencingRequest
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.PointOfInterest
+import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
+import com.udacity.project4.authentication.FirebaseUserLiveData
 import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.base.NavigationCommand
+import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import kotlinx.coroutines.launch
 
 class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSource) :
     BaseViewModel(app) {
+
+    enum class AuthenticationState {
+        AUTHENTICATED, UNAUTHENTICATED
+    }
+
+    val authenticationState = FirebaseUserLiveData().map {
+        if(it!=null)
+        {
+            AuthenticationState.AUTHENTICATED
+        }else
+        {
+            AuthenticationState.UNAUTHENTICATED
+        }
+    }
+
+    private val _validUser = MutableLiveData<Boolean>()
+    val validUser : LiveData<Boolean>
+        get() = _validUser
+
+    fun enableSaveForValidUser(){
+        _validUser.value = true
+    }
+
+    fun disableSaveForValidUser(){
+        _validUser.value = false
+    }
+
+    fun isValidUser(): Boolean = validUser.value == true
+
+
+    private var geofencingClient: GeofencingClient
+
+    init {
+        geofencingClient = LocationServices.getGeofencingClient(app.applicationContext)
+        _validUser.value = false
+    }
+
+    private val goeFencingPendingIntent by lazy{
+        val intent = Intent(app, GeofenceBroadcastReceiver::class.java)
+        intent.action = SaveReminderFragment.ACTION_GEOFENCE_EVENT
+        PendingIntent.getBroadcast(app.applicationContext ,0,intent, PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
     /*
     Once the save details is validated we want to start geofencing after it
     we want to enable it from viewModel, so we need to create a livedata variable
@@ -45,6 +102,7 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
 
     val latitude = MutableLiveData<Double>()
     val longitude = MutableLiveData<Double>()
+
 
 
     /*
@@ -80,12 +138,6 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
             saveReminder(reminderData)
 
 
-            navigationCommand.value = NavigationCommand
-                .To(SaveReminderFragmentDirections
-                    .actionSaveReminderFragmentToReminderListFragment())
-
-            //tell fragment that everything is ok you can start geofencing
-                _enableGeofence.value =true
         }
 
     }
@@ -111,7 +163,8 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
             )
             showLoading.value = false
             showToast.value = app.getString(R.string.reminder_saved)
-            navigationCommand.value = NavigationCommand.Back
+            //tell fragment that everything is ok you can start geofencing
+            _enableGeofence.value =true
         }
     }
 
@@ -130,4 +183,44 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
         }
         return true
     }
+
+    /*
+        Add geofencing and once activated show user about it.
+     */
+    @SuppressLint("MissingPermission")
+    fun addGeofencing(requestId : String){
+
+        //Use the dwell transition type to reduce alert spam
+        val geofence = Geofence.Builder().apply {
+            setRequestId(requestId)
+            setCircularRegion(latitude.value!!,longitude.value!!,100f)
+            setExpirationDuration(Geofence.NEVER_EXPIRE)
+            setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+            setLoiteringDelay(120000) //2 minutes.
+        }.build()
+
+        val geofencingRequest = GeofencingRequest.Builder().apply {
+            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            addGeofence(geofence)
+        }.build()
+
+
+        geofencingClient.removeGeofences(goeFencingPendingIntent)?.run {
+            addOnCompleteListener {
+                geofencingClient.addGeofences(geofencingRequest,goeFencingPendingIntent)?.run {
+                    addOnSuccessListener {
+                        Log.i("myTag","Success")
+                    }
+                    addOnFailureListener{
+                        Log.i("myTag","Failed")
+                    }
+                }
+            }
+
+            navigationCommand.value = NavigationCommand.Back
+
+        }
+    }
+
+
 }

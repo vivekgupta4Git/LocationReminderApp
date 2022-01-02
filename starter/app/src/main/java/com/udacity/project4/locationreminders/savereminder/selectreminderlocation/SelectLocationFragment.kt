@@ -24,6 +24,7 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+import java.util.*
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
@@ -55,13 +56,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         val mapFragment = childFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-       return binding.root
+
+        return binding.root
     }
 
     /*
     Setting the selected Poi to viewModel and navigating back.
      */
     private fun onLocationSelected(selectedPoi : PointOfInterest) {
+        Log.i("myTag","Selected Poi (Lat & Long ) : ${selectedPoi.name}  (${selectedPoi.latLng.latitude} , ${selectedPoi.latLng.longitude})")
         Snackbar.make(requireView(), "Save Location", Snackbar.LENGTH_INDEFINITE)
             .setAction("Save") {
                 _viewModel.setPoi(selectedPoi)
@@ -100,7 +103,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
+
+
+
         setMapStyle()
+
 
         if (ActivityCompat.checkSelfPermission(requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
@@ -112,24 +119,25 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             return
         }
         enableMyLocation()
-        setPoiClickListener()
+        setPoiClickListener(map)
     }
 
     @SuppressLint("MissingPermission")
     private fun enableMyLocation(){
         googleMap.isMyLocationEnabled = true
 
-        //using fused location provider client as it efficient in terms of battery usage.
-        fusedLocationProviderClient = FusedLocationProviderClient(requireActivity())
 
-
+//using fused location provider client as it efficient in terms of battery usage.
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         fusedLocationProviderClient.lastLocation.addOnSuccessListener {location->
             if (location!=null) {
                 googleMap.moveCamera(
                     CameraUpdateFactory.newLatLngZoom(
                         LatLng(location.latitude, location.longitude), ZOOM_LEVEL))
+                Log.i("myTag","${location.latitude}, ${location.longitude}")
             }
         }
+
     }
 
     override fun onRequestPermissionsResult(
@@ -151,18 +159,18 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
 
 
-    private fun setPoiClickListener() {
+    private fun setPoiClickListener(gmap : GoogleMap) {
 
-        googleMap.setOnPoiClickListener {
-            googleMap.addMarker(MarkerOptions()
-                .position(it.latLng)
-                .title(it.name)
-                .snippet("${it.latLng.latitude} ,${it.latLng.longitude}")
-            ).showInfoWindow()
-
+        gmap.setOnPoiClickListener {
+            val poiMarker = gmap.addMarker(
+                MarkerOptions().position(it.latLng)
+                    .title(it.name)
+                    .snippet("${it.latLng.latitude},${it.latLng.longitude}")
+            )
+            poiMarker?.showInfoWindow()
             onLocationSelected(it)
-
         }
+
     }
 
     private fun setMapStyle()
