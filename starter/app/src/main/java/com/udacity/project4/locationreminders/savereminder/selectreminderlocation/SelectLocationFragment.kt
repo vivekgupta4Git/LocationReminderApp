@@ -5,7 +5,9 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.location.Location
 import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
@@ -19,12 +21,14 @@ import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
+import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
@@ -33,6 +37,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var googleMap : GoogleMap
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
+    private var currentLocation: Location? = null
+
 
     companion object{
        const  val REQUEST_CODE = 10
@@ -65,6 +73,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      */
     private fun onLocationSelected(selectedPoi : PointOfInterest) {
         Log.i("myTag","Selected Poi (Lat & Long ) : ${selectedPoi.name}  (${selectedPoi.latLng.latitude} , ${selectedPoi.latLng.longitude})")
+       // _viewModel.showSnackBar.value = "Save Location"
+
         Snackbar.make(requireView(), "Save Location", Snackbar.LENGTH_INDEFINITE)
             .setAction("Save") {
                 _viewModel.setPoi(selectedPoi)
@@ -127,14 +137,59 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         googleMap.isMyLocationEnabled = true
 
 
+
 //using fused location provider client as it efficient in terms of battery usage.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        locationRequest = LocationRequest().apply {
+            interval = TimeUnit.SECONDS.toMillis(60)
+            fastestInterval = TimeUnit.SECONDS.toMillis(30)
+            maxWaitTime = TimeUnit.MINUTES.toMillis(2)
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+
+        locationCallback = object :LocationCallback(){
+            override fun onLocationResult(locationResult: LocationResult?) {
+                super.onLocationResult(locationResult)
+                locationResult?.lastLocation.let {
+                    currentLocation = it
+                    if(currentLocation!=null)
+                    {
+                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                            LatLng(currentLocation!!.latitude, currentLocation!!.longitude),
+                            ZOOM_LEVEL
+                        ))
+                    }
+                }
+            }
+        }
+
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest,locationCallback, Looper.myLooper())
+
+
+
+/*
         fusedLocationProviderClient.lastLocation.addOnSuccessListener {location->
             if (location!=null) {
                 googleMap.moveCamera(
                     CameraUpdateFactory.newLatLngZoom(
                         LatLng(location.latitude, location.longitude), ZOOM_LEVEL))
                 Log.i("myTag","${location.latitude}, ${location.longitude}")
+            }
+        }
+*/
+
+    }
+
+
+    override fun onDestroy() {
+
+        super.onDestroy()
+        val removeTask = fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+        removeTask.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d("myTag", "Location Callback removed.")
+            } else {
+                Log.d("myTag", "Failed to remove Location Callback.")
             }
         }
 
@@ -186,5 +241,43 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             Log.e("myMap","can't find the style. Error : ",e)
         }
     }
+
+
+    /*
+    // FusedLocationProviderClient - Main class for receiving location updates.
+private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+
+// LocationRequest - Requirements for the location updates, i.e.,
+// how often you should receive updates, the priority, etc.
+private lateinit var locationRequest: LocationRequest
+
+// LocationCallback - Called when FusedLocationProviderClient
+// has a new Location
+private lateinit var locationCallback: LocationCallback
+
+// This will store current location info
+private var currentLocation: Location? = null
+
+fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+
+
+
+
+//subscribe
+fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+
+//unsubscribe
+val removeTask = fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+removeTask.addOnCompleteListener { task ->
+if (task.isSuccessful) {
+	Log.d(TAG, "Location Callback removed.")
+} else {
+	Log.d(TAG, "Failed to remove Location Callback.")
+}
+}
+
+
+     */
+
 
 }

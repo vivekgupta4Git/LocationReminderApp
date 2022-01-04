@@ -209,10 +209,10 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
             addOnCompleteListener {
                 geofencingClient.addGeofences(geofencingRequest,goeFencingPendingIntent)?.run {
                     addOnSuccessListener {
-                        Log.i("myTag","Success")
+                        Log.i("myTag","Success!! Geofencing Activated")
                     }
                     addOnFailureListener{
-                        Log.i("myTag","Failed")
+                        Log.i("myTag","Failed!! Geofencing Failed")
                     }
                 }
             }
