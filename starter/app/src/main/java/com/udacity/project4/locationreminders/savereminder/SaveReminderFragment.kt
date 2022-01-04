@@ -66,6 +66,12 @@ class SaveReminderFragment : BaseFragment() {
 
             )
             _viewModel.validateAndSaveReminder(reminderDataItem)
+            _viewModel.enableGeofencing.observe(viewLifecycleOwner, Observer {
+                enabled->
+                if(enabled)
+                    _viewModel.addGeofencing(reminderDataItem.id)
+                    _viewModel.onceEnabledDisableGeofence()
+            })
         }
 
     }

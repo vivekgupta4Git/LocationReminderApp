@@ -18,21 +18,23 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.stopKoin
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.Observer
+import kotlinx.coroutines.test.runBlockingTest
 
 import org.junit.Rule
-
-
+import org.koin.androidx.viewmodel.dsl.ATTRIBUTE_VIEW_MODEL
 
 
 //@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class SaveReminderViewModelTest {
-
+    //subject under test.
     private lateinit var viewModel: SaveReminderViewModel
     private lateinit var dataSource: FakeDataSource
 
-    //Save Reminder view model has many livedata objects and functions but here
-    //we will test saveReminder function and will test showToast live data
+    //we will test saveReminder function and will test live data objects
+
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
@@ -43,19 +45,14 @@ class SaveReminderViewModelTest {
     @Before
     fun setupViewModel(){
         stopKoin()
-        val reminder1 = ReminderDTO("reminder1","description1","location1",10.0,20.2)
-        val reminder2 = ReminderDTO("reminder2","description2","location2",9.0,30.2)
-        val reminder3 = ReminderDTO("reminder3","description3","location3",15.0,29.233)
-        val reminderList = mutableListOf(reminder1,reminder2,reminder3)
-        dataSource = FakeDataSource(reminderList)
+        dataSource = FakeDataSource()
         viewModel = SaveReminderViewModel(getApplicationContext(),dataSource)
     }
 
     @Test
     fun saveReminder_addingNewReminderInEmptyList_showToastReminderSaved(){
-        stopKoin()
         //given empty list
-        dataSource = FakeDataSource()
+      //  dataSource = FakeDataSource()
         //when new reminder is saved
         val reminder1 = ReminderDataItem("reminder1","description1","location1",10.0,20.2)
         viewModel.saveReminder(reminder1)
@@ -67,7 +64,84 @@ class SaveReminderViewModelTest {
 
     }
 
-    //TODO: provide testing to the SaveReminderView and its live data objects
+    @Test
+    fun validateEnterData_titleEmptyOrNullOrLocationEmptyOrNull_returnFalse(){
+        //for given reminders having null or empty title
+
+        val reminder1 = ReminderDataItem("","desc","location",0.0,0.0)
+        val reminder2 = ReminderDataItem(null,"desc","location",0.0,0.0)
+        val reminder3 = ReminderDataItem("title","description","",0.0,0.0)
+        val reminder4 = ReminderDataItem("title","description",null,0.0,0.0)
+        val reminderlist = listOf(reminder1,reminder2,reminder3,reminder4)
+
+    //when validating EmptyOrNull Title
+        for(reminder in reminderlist){
+           val booleanValue=  viewModel.validateEnteredData(reminder)
+            //then returned value is false
+            assert(!booleanValue)
+        }
+
+
+    }
+
+
+    //live data testing
+    @Test
+    fun validateEnterData_EmptyOrNullTitle_showSnackBarNoTitle() {
+
+        //given data source
+
+//do nothing observer
+        val observer = Observer<Int>{}
+
+        try {
+            viewModel.showSnackBarInt.observeForever(observer)
+            //when validating reminder without having title name
+            val reminder1 = ReminderDataItem("","description1","location1",10.0,20.2)
+            val reminder2 = ReminderDataItem(null,"description2","Dummy",0.0,0.0)
+
+            val reminderList = listOf(reminder1,reminder2)
+            for(reminder in reminderList){
+                viewModel.validateEnteredData(reminder)
+                val value = viewModel.showSnackBarInt.value
+                //then show Snack Bar No Title
+                assertThat(value,`is` (R.string.err_enter_title))
+            }
+
+        }finally {
+            viewModel.showSnackBarInt.removeObserver(observer)
+        }
+
+    }
+
+    //live data testing
+    @Test
+    fun validateEnterData_EmptyOrNullLocation_showSnackBarSelectLocation() {
+
+        //given data source
+
+//do nothing observer
+        val observer = Observer<Int>{}
+
+        try {
+            viewModel.showSnackBarInt.observeForever(observer)
+            //when validating reminder without having location
+            val reminder1 = ReminderDataItem("ti","description1","",10.0,20.2)
+            val reminder2 = ReminderDataItem("tit","description2","empty",0.0,0.0)
+
+            val reminderList = listOf(reminder1,reminder2)
+            for(reminder in reminderList){
+                viewModel.validateEnteredData(reminder)
+                val value = viewModel.showSnackBarInt.value
+                //then show Snack Bar Select location
+                assertThat(value,`is` (R.string.err_select_location))
+            }
+
+        }finally {
+            viewModel.showSnackBarInt.removeObserver(observer)
+        }
+
+    }
 
 
 }
