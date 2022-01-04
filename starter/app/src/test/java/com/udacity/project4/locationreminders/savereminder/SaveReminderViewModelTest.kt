@@ -23,6 +23,7 @@ import androidx.lifecycle.Observer
 import kotlinx.coroutines.test.runBlockingTest
 
 import org.junit.Rule
+import org.junit.runners.JUnit4
 import org.koin.androidx.viewmodel.dsl.ATTRIBUTE_VIEW_MODEL
 
 

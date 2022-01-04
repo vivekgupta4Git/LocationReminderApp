@@ -11,30 +11,18 @@ import java.lang.Error
 //Use FakeDataSource that acts as a test double to the LocalDataSource
 class FakeDataSource(private val reminders:MutableList<ReminderDTO>?= mutableListOf()) : ReminderDataSource {
 
-    //for livedata testing
-    private val observableRemindersList = MutableLiveData<Result<List<ReminderDTO>>>()
 
+    var shouldReturnError = false
 
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
 
-        reminders?.let {
-            return Result.Success(ArrayList(it))
-            }
+    if(shouldReturnError)
         return Result.Error("Not found")
+        else
+           return Result.Success(ArrayList(reminders))
+
     }
 
-    suspend fun refreshTasks(){
-        observableRemindersList.value = getReminders()
-    }
-
-    //observing live data for testing
-    suspend fun observeTasks() : LiveData<Result<List<ReminderDTO>>>{
-
-        runBlocking {
-            refreshTasks()
-        }
-        return observableRemindersList
-    }
 
     override suspend fun saveReminder(reminder: ReminderDTO) {
         reminders?.add(reminder)
@@ -42,6 +30,9 @@ class FakeDataSource(private val reminders:MutableList<ReminderDTO>?= mutableLis
 
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
+        if(shouldReturnError)
+            return Result.Error("Not found")
+
 
          val foundReminder = reminders?.find { it.id == id }
 
@@ -56,17 +47,5 @@ class FakeDataSource(private val reminders:MutableList<ReminderDTO>?= mutableLis
         reminders?.clear()
     }
 
-
-    //for testing
-    fun addReminders(vararg remindersToAdd: ReminderDTO)
-    {
-        for(reminder in remindersToAdd)
-        {
-            reminders?.add(reminder)
-        }
-        runBlocking {
-            refreshTasks()
-        }
-    }
 
 }
