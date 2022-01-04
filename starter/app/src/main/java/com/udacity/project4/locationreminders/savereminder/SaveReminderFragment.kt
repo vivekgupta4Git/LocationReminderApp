@@ -14,15 +14,14 @@ import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
 
-class SaveReminderFragment : BaseFragment()
-{
+class SaveReminderFragment : BaseFragment() {
     //Get the view model this time as a single to be shared with the another fragment
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSaveReminderBinding
-companion object{
-  const  val ACTION_GEOFENCE_EVENT = "com.udacity.project4.locationreminders.GEOFENCING_EVENT"
-}
 
+    companion object {
+        const val ACTION_GEOFENCE_EVENT = "com.udacity.project4.locationreminders.GEOFENCING_EVENT"
+    }
 
 
     override fun onCreateView(
@@ -49,16 +48,9 @@ companion object{
                 NavigationCommand.To(SaveReminderFragmentDirections.actionSaveReminderFragmentToSelectLocationFragment())
         }
 
-        observer()
 
 
         binding.saveReminder.setOnClickListener {
-
-            if(!_viewModel.isValidUser())
-            {
-                    NavigationCommand.To(SaveReminderFragmentDirections.actionSaveReminderFragmentToMainActivity())
-            }
-
             val title = _viewModel.reminderTitle.value
             val description = _viewModel.reminderDescription
             val location = _viewModel.reminderSelectedLocationStr.value
@@ -69,39 +61,19 @@ companion object{
                 title,
                 description.value,
                 location,
-                latitude.value ,
+                latitude.value,
                 longitude
 
             )
-            _viewModel.validateAndSaveReminder( reminderDataItem)
+            _viewModel.validateAndSaveReminder(reminderDataItem)
+        }
 
-            _viewModel.enableGeofence.observe(viewLifecycleOwner, Observer { enabled->
-                if(enabled)
-                {
-                    _viewModel.addGeofencing(reminderDataItem.id)
-                    _viewModel.onceEnabledDisableAgainGeofence()
-                }
-            })
-
-       }
     }
 
-
-
-    override fun onDestroy() {
+  override fun onDestroy() {
         super.onDestroy()
         //make sure to clear the view model after destroy, as it's a single view model.
         _viewModel.onClear()
     }
 
-    private fun observer() {
-        _viewModel.authenticationState.observe(viewLifecycleOwner, Observer { authenticateState ->
-            when (authenticateState) {
-                SaveReminderViewModel.AuthenticationState.AUTHENTICATED ->
-                    _viewModel.enableSaveForValidUser()
-                else -> _viewModel.disableSaveForValidUser()
-            }
-        })
-
-    }
-}
+   }

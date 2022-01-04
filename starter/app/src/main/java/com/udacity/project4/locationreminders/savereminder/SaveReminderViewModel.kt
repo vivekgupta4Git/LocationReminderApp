@@ -31,66 +31,12 @@ import kotlinx.coroutines.launch
 class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSource) :
     BaseViewModel(app) {
 
-    enum class AuthenticationState {
-        AUTHENTICATED, UNAUTHENTICATED
-    }
-
-    val authenticationState = FirebaseUserLiveData().map {
-        if(it!=null)
-        {
-            AuthenticationState.AUTHENTICATED
-        }else
-        {
-            AuthenticationState.UNAUTHENTICATED
-        }
-    }
-
-    private val _validUser = MutableLiveData<Boolean>()
-    val validUser : LiveData<Boolean>
-        get() = _validUser
-
-    fun enableSaveForValidUser(){
-        _validUser.value = true
-    }
-
-    fun disableSaveForValidUser(){
-        _validUser.value = false
-    }
-
-    fun isValidUser(): Boolean = validUser.value == true
-
-
-    private var geofencingClient: GeofencingClient
-
-    init {
-        geofencingClient = LocationServices.getGeofencingClient(app.applicationContext)
-        _validUser.value = false
-    }
+    private var geofencingClient: GeofencingClient = LocationServices.getGeofencingClient(app.applicationContext)
 
     private val goeFencingPendingIntent by lazy{
         val intent = Intent(app, GeofenceBroadcastReceiver::class.java)
         intent.action = SaveReminderFragment.ACTION_GEOFENCE_EVENT
         PendingIntent.getBroadcast(app.applicationContext ,0,intent, PendingIntent.FLAG_UPDATE_CURRENT)
-    }
-
-    /*
-    Once the save details is validated we want to start geofencing after it
-    we want to enable it from viewModel, so we need to create a livedata variable
-    which will be enabled once data is validated and it will be observed in fragment
-    once the value is true , start geofence otherwise not.
-     */
-
-    private var _enableGeofence = MutableLiveData<Boolean>()
-    val enableGeofence : LiveData<Boolean>
-    get() = _enableGeofence
-
-
-    fun onceEnabledDisableAgainGeofence(){
-        _enableGeofence.value= false
-    }
-
-    init {
-        _enableGeofence.value = false
     }
 
     val reminderTitle = MutableLiveData<String>()
@@ -161,10 +107,11 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
                     reminderData.id
                 )
             )
+            //add geofencing
+            addGeofencing(reminderData.id)
             showLoading.value = false
             showToast.value = app.getString(R.string.reminder_saved)
-            //tell fragment that everything is ok you can start geofencing
-            _enableGeofence.value =true
+            navigationCommand.value = NavigationCommand.Back
         }
     }
 
@@ -217,7 +164,6 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
                 }
             }
 
-            navigationCommand.value = NavigationCommand.Back
 
         }
     }

@@ -1,11 +1,13 @@
 package com.udacity.project4.locationreminders.reminderslist
 
 import android.app.Application
+import androidx.lifecycle.MutableLiveData
 //import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.data.dto.Result
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Before
 import org.junit.Rule
@@ -21,6 +23,7 @@ class RemindersListViewModelTest {
   /*  @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
 */
+
      private lateinit var viewModel: RemindersListViewModel
 
     private lateinit var  fakeDataSource : FakeDataSource
@@ -37,13 +40,14 @@ class RemindersListViewModelTest {
 
     }
 
+
+    //subjectUnderTest_actionOrInput_resultState
     @Test
-    fun loadReminders_ (){
+    fun loadReminders_reminderListWithThreeReminders_ShowInUI (){
 
     }
 
 
     //
-// TODO: provide testing to the RemindersListViewModel and its live data objects
 
 }
