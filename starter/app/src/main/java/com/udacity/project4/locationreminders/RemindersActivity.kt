@@ -182,12 +182,7 @@ class RemindersActivity : AppCompatActivity() {
                     }.show()
             }
         }
-        locationSettingResponseTask.addOnCompleteListener{
-            if(it.isSuccessful)
-            {
-                //add Geofence
-            }
-        }
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

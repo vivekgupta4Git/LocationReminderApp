@@ -1,19 +1,15 @@
 package com.udacity.project4.locationreminders.reminderslist
 
-import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.lifecycle.MutableLiveData
 //import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
-import com.udacity.project4.locationreminders.data.dto.Result
 import com.udacity.project4.locationreminders.savereminder.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
 import org.hamcrest.collection.IsEmptyCollection
 import org.junit.Assert.*
@@ -96,10 +92,10 @@ class RemindersListViewModelTest {
     fun loadReminders_hasErrors_showExceptionMessage() = runBlockingTest{
 
     //given viewModel
-        fakeDataSource.shouldReturnError = true
+        fakeDataSource.shouldReturnError()
         viewModel = RemindersListViewModel(ApplicationProvider.getApplicationContext(),fakeDataSource)
 
-        //when result has error
+        //when returned result has error
         viewModel.loadReminders()
         val message = viewModel.showSnackBar.getOrAwaitValue()
 

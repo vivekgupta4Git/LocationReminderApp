@@ -1,22 +1,22 @@
 package com.udacity.project4.locationreminders.data
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
-import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
-import kotlinx.coroutines.runBlocking
-import java.lang.Error
 
 //Use FakeDataSource that acts as a test double to the LocalDataSource
-class FakeDataSource(private val reminders:MutableList<ReminderDTO>?= mutableListOf()) : ReminderDataSource {
+class FakeDataSource(private val reminders:MutableList<ReminderDTO> = mutableListOf()) : ReminderDataSource {
 
 
-    var shouldReturnError = false
+    var hasError = false
+
+    //testing function shouldReturnError
+    fun shouldReturnError(){
+        hasError = true
+    }
 
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
 
-    if(shouldReturnError)
+    if(hasError)
         return Result.Error("Not found")
         else
            return Result.Success(ArrayList(reminders))
@@ -30,7 +30,7 @@ class FakeDataSource(private val reminders:MutableList<ReminderDTO>?= mutableLis
 
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
-        if(shouldReturnError)
+        if(hasError)
             return Result.Error("Not found")
 
 
