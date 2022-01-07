@@ -7,6 +7,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
+import androidx.navigation.navOptions
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
@@ -112,8 +113,11 @@ class ReminderListFragmentTest :KoinTest {
         launchFragmentInContainer<ReminderListFragment>(null,R.style.AppTheme)
 
         onView(withText(reminder.title)).check(matches(isDisplayed()))
+        onView(withText(reminder.title)).check(matches(withText("title1")))
         onView(withText(reminder.description)).check(matches(isDisplayed()))
+        onView(withText(reminder.description)).check(matches(withText("description1")))
         onView(withText(reminder.location)).check(matches(isDisplayed()))
+        onView(withText(reminder.location)).check(matches(withText("location1")))
     }
 
 
@@ -133,5 +137,20 @@ class ReminderListFragmentTest :KoinTest {
         onView(withText(R.string.no_data)).check(matches(isDisplayed()))
 
     }
-//    TODO: test the navigation of the fragments.
+
+    @Test
+    fun onFabClick_navigateToSaveReminderFragment(){
+    //given ReminderListFragment having Navigation controller
+        val navController = mock(NavController::class.java)
+        val scenario = launchFragmentInContainer<ReminderListFragment>(Bundle(),R.style.AppTheme)
+        scenario.onFragment {
+            Navigation.setViewNavController(it.view!!,navController)
+        }
+
+        //when User click on fab button
+        onView(withId(R.id.addReminderFAB)).perform(click())
+
+        //then verify that we navigate to the save Reminder Fragment
+        verify(navController).navigate(ReminderListFragmentDirections.toSaveReminder())
+    }
 }
