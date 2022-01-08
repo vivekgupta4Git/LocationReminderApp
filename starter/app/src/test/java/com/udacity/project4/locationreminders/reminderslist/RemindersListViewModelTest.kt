@@ -9,6 +9,7 @@ import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.savereminder.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
@@ -116,13 +117,15 @@ class RemindersListViewModelTest {
         val reminder2 = ReminderDTO("reminder2","description2","location2",9.0,30.2)
         val reminder3 = ReminderDTO("reminder3","description3","location3",15.0,29.233)
         val reminderList = mutableListOf(reminder1,reminder2,reminder3)
+
         fakeDataSource = FakeDataSource(reminderList)
-        //given viewmodel  with data
+        //given viewModel  with data
         viewModel = RemindersListViewModel(ApplicationProvider.getApplicationContext(),fakeDataSource)
 
-        //when loaded with data
-        viewModel.loadReminders()
         mainCoroutineRule.pauseDispatcher()
+            viewModel.loadReminders()
+        //when loaded with data
+
         //then verify that showLoading is visible which let user know that data is loading
         assertThat(viewModel.showLoading.getOrAwaitValue(),`is`(true))
         //resuming dispatcher

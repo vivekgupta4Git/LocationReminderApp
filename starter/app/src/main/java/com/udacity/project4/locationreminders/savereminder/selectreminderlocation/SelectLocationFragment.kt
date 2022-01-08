@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.view.*
+import androidx.annotation.VisibleForTesting
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.location.*
@@ -129,6 +130,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             return
         }
         enableMyLocation()
+        setMapLongClick(map)
         setPoiClickListener(map)
     }
 
@@ -140,34 +142,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
 //using fused location provider client as it efficient in terms of battery usage.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        locationRequest = LocationRequest().apply {
-            interval = TimeUnit.SECONDS.toMillis(60)
-            fastestInterval = TimeUnit.SECONDS.toMillis(30)
-            maxWaitTime = TimeUnit.MINUTES.toMillis(2)
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
-
-        locationCallback = object :LocationCallback(){
-            override fun onLocationResult(locationResult: LocationResult?) {
-                super.onLocationResult(locationResult)
-                locationResult?.lastLocation.let {
-                    currentLocation = it
-                    if(currentLocation!=null)
-                    {
-                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                            LatLng(currentLocation!!.latitude, currentLocation!!.longitude),
-                            ZOOM_LEVEL
-                        ))
-                    }
-                }
-            }
-        }
-
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest,locationCallback, Looper.myLooper())
-
-
-
-/*
         fusedLocationProviderClient.lastLocation.addOnSuccessListener {location->
             if (location!=null) {
                 googleMap.moveCamera(
@@ -176,24 +150,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 Log.i("myTag","${location.latitude}, ${location.longitude}")
             }
         }
-*/
 
     }
 
 
-    override fun onDestroy() {
-
-        super.onDestroy()
-        val removeTask = fusedLocationProviderClient.removeLocationUpdates(locationCallback)
-        removeTask.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Log.d("myTag", "Location Callback removed.")
-            } else {
-                Log.d("myTag", "Failed to remove Location Callback.")
-            }
-        }
-
-    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -243,41 +203,31 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
 
-    /*
-    // FusedLocationProviderClient - Main class for receiving location updates.
-private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    //this function is for testing purpose
+    private fun setMapLongClick(map: GoogleMap) {
+        map.setOnMapLongClickListener { latLng ->
+            val snippet = String.format(
+                Locale.getDefault(),
+                "Lat: %1$.5f, Long: %2$.5f",
+                latLng.latitude,
+                latLng.longitude
+            )
 
-// LocationRequest - Requirements for the location updates, i.e.,
-// how often you should receive updates, the priority, etc.
-private lateinit var locationRequest: LocationRequest
+            _viewModel.latitude.value = latLng.latitude
+            _viewModel.longitude.value = latLng.longitude
+            _viewModel.reminderSelectedLocationStr.value = "Random Location"
 
-// LocationCallback - Called when FusedLocationProviderClient
-// has a new Location
-private lateinit var locationCallback: LocationCallback
-
-// This will store current location info
-private var currentLocation: Location? = null
-
-fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
-
-
-
-
-//subscribe
-fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
-
-//unsubscribe
-val removeTask = fusedLocationProviderClient.removeLocationUpdates(locationCallback)
-removeTask.addOnCompleteListener { task ->
-if (task.isSuccessful) {
-	Log.d(TAG, "Location Callback removed.")
-} else {
-	Log.d(TAG, "Failed to remove Location Callback.")
-}
-}
+            map.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+                    .title("Random Location")
+                    .snippet(snippet)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+            )
+        }
+    }
 
 
-     */
 
 
 }
