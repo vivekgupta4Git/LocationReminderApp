@@ -2,8 +2,11 @@ package com.udacity.project4
 
 import android.app.Activity
 import android.app.Application
+import android.os.Build
+import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.*
@@ -63,6 +66,7 @@ class RemindersActivityTest :
      */
     @Before
     fun init() {
+        Log.i("myTag","Version :${BuildConfig.VERSION_CODE} Sdk : ${Build.VERSION.SDK_INT}" )
         stopKoin()//stop the original app koin
         appContext = getApplicationContext()
         val myModule = module {
@@ -124,11 +128,14 @@ class RemindersActivityTest :
 
         onView(withContentDescription("Google Map")).perform(longClick());
 
-        onView(withContentDescription("Google Map")).perform(pressBack())
+        Espresso.pressBack()
      //   onView(withId(com.google.android.material.R.id.snackbar_text)).perform(click())
         onView(withId(R.id.saveReminder)).perform(click())
+
         onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not  (getActivity(activityScenario)?.window?.getDecorView())))
             .check(ViewAssertions.matches(isDisplayed()))
+
+        activityScenario.close()
 
 
     }
