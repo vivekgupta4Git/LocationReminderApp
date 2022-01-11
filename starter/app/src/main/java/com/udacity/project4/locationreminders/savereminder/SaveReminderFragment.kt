@@ -12,6 +12,7 @@ import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSaveReminderBinding
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
+import org.koin.android.ext.android.bind
 import org.koin.android.ext.android.inject
 
 class SaveReminderFragment : BaseFragment() {
@@ -66,12 +67,7 @@ class SaveReminderFragment : BaseFragment() {
 
             )
             _viewModel.validateAndSaveReminder(reminderDataItem)
-            _viewModel.enableGeofencing.observe(viewLifecycleOwner, Observer {
-                enabled->
-                if(enabled)
-                    _viewModel.addGeofencing(reminderDataItem.id)
-                    _viewModel.onceEnabledDisableGeofence()
-            })
+
         }
 
     }

@@ -204,6 +204,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
 
     //this function is for testing purpose
+    @VisibleForTesting
     private fun setMapLongClick(map: GoogleMap) {
         map.setOnMapLongClickListener { latLng ->
             val snippet = String.format(

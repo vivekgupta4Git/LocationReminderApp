@@ -10,16 +10,14 @@ import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.*
-import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.*
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
-import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.local.LocalDB
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
@@ -28,12 +26,9 @@ import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.monitorActivity
 import com.udacity.project4.utils.EspressoIdlingResource
 import kotlinx.coroutines.runBlocking
-import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -125,17 +120,15 @@ class RemindersActivityTest :
         onView(withId(R.id.reminderTitle)).perform(typeText("Title 1"))
         onView(withId(R.id.reminderDescription)).perform(typeText("Description 1"))
         onView(withId(R.id.selectLocation)).perform(click())
-
-        onView(withContentDescription("Google Map")).perform(longClick());
-
+        onView(withContentDescription("Google Map")).perform(longClick())
         Espresso.pressBack()
-     //   onView(withId(com.google.android.material.R.id.snackbar_text)).perform(click())
         onView(withId(R.id.saveReminder)).perform(click())
+        onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not(getActivity(activityScenario)?.window?.decorView))) .check(matches(isDisplayed()))
+        onView(withText(R.string.reminder_saved)).inRoot(ToastMatcher()).check(matches(isDisplayed()))
 
-        onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not  (getActivity(activityScenario)?.window?.getDecorView())))
-            .check(ViewAssertions.matches(isDisplayed()))
 
         activityScenario.close()
+
 
 
     }

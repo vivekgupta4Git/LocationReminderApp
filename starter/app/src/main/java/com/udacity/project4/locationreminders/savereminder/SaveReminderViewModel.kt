@@ -31,19 +31,6 @@ import kotlinx.coroutines.launch
 class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSource) :
     BaseViewModel(app) {
 
-    private var _enableGeoFencing = MutableLiveData<Boolean>()
-    val enableGeofencing : LiveData<Boolean>
-    get() = _enableGeoFencing
-
-    init {
-        _enableGeoFencing.value = false
-    }
-
-    //Event
-    fun onceEnabledDisableGeofence(){
-        _enableGeoFencing.value = false
-    }
-
     private var geofencingClient: GeofencingClient = LocationServices.getGeofencingClient(app.applicationContext)
 
     private val goeFencingPendingIntent by lazy{
@@ -95,8 +82,7 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     fun validateAndSaveReminder(reminderData: ReminderDataItem) {
         if (validateEnteredData(reminderData)) {
             saveReminder(reminderData)
-
-
+            addGeofencing(reminderData.id)
         }
 
     }
@@ -120,8 +106,6 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
                     reminderData.id
                 )
             )
-            //allow fragment to start adding geofencing
-            _enableGeoFencing.value = true
             showLoading.value = false
             showToast.value = app.getString(R.string.reminder_saved)
             navigationCommand.value = NavigationCommand.Back
