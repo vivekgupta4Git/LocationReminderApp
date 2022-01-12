@@ -82,7 +82,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         Log.i("myTag","Selected Poi (Lat & Long ) : ${selectedPoi.name}  (${selectedPoi.latLng.latitude} , ${selectedPoi.latLng.longitude})")
        // _viewModel.showSnackBar.value = "Save Location"
 
-        Snackbar.make(binding.root, "Save Location", Snackbar.LENGTH_LONG)
+        Snackbar.make(binding.root, "Save Location", Snackbar.LENGTH_INDEFINITE)
             .setAction("Save") {
                 _viewModel.setPoi(selectedPoi)
                 _viewModel.navigationCommand.postValue(

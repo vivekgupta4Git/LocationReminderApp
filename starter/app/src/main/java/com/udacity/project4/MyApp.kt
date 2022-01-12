@@ -36,6 +36,7 @@ class MyApp : Application() {
                 )
             }
 
+
             // RemindersLocalRepository
             single<RemindersLocalRepository> {
                 RemindersLocalRepository(get())

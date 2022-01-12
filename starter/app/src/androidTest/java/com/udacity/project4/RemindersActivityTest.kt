@@ -18,14 +18,17 @@ import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
+import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.local.LocalDB
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
+import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.monitorActivity
 import com.udacity.project4.utils.EspressoIdlingResource
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
@@ -34,9 +37,11 @@ import org.junit.runner.RunWith
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.inject
 import org.koin.dsl.module
 import org.koin.test.AutoCloseKoinTest
 import org.koin.test.get
+import org.koin.test.inject
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
@@ -54,6 +59,8 @@ class RemindersActivityTest :
     }
     private lateinit var repository: ReminderDataSource
     private lateinit var appContext: Application
+
+
 
     /**
      * As we use Koin as a Service Locator Library to develop our code, we'll also use Koin to test our code.
@@ -86,7 +93,6 @@ class RemindersActivityTest :
         }
         //Get our real repository
         repository = get()
-
         //clear the data to start fresh
         runBlocking {
             repository.deleteAllReminders()
@@ -111,8 +117,11 @@ class RemindersActivityTest :
 
     @Test
     fun addReminder() {
+
+
         val activityScenario =
             ActivityScenario.launch(RemindersActivity::class.java)
+
 
         dataBindingIdlingResource.monitorActivity(activityScenario)
 
@@ -121,9 +130,8 @@ class RemindersActivityTest :
         onView(withId(R.id.reminderDescription)).perform(typeText("Description 1"))
         onView(withId(R.id.selectLocation)).perform(click())
         onView(withContentDescription("Google Map")).perform(longClick())
-        Espresso.pressBack()
+        onView(withId(com.google.android.material.R.id.snackbar_action)).perform(click())
         onView(withId(R.id.saveReminder)).perform(click())
-        onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not(getActivity(activityScenario)?.window?.decorView))) .check(matches(isDisplayed()))
         onView(withText(R.string.reminder_saved)).inRoot(ToastMatcher()).check(matches(isDisplayed()))
 
 
@@ -131,6 +139,26 @@ class RemindersActivityTest :
 
 
 
+    }
+
+    @Test
+    fun savedReminder() = runBlocking {
+        //initial
+        val reminder1 = ReminderDTO("title1","describ1","location1",0.0,0.0)
+        repository.saveReminder(reminder1)
+
+        //start up the activity screen
+        val activityScenario  = ActivityScenario.launch(RemindersActivity::class.java)
+        dataBindingIdlingResource.monitorActivity(activityScenario)
+
+        onView(withId(R.id.title)).check(matches(isDisplayed()))
+        onView(withId(R.id.title)).check(matches(withText("title1")))
+
+        onView(withId(R.id.description)).check(matches(isDisplayed()))
+        onView(withId(R.id.description)).check(matches(withText("describ1")))
+
+
+        activityScenario.close()
     }
 
 }

@@ -27,6 +27,7 @@ import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.dsl.ATTRIBUTE_VIEW_MODEL
 
 class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSource) :
     BaseViewModel(app) {
@@ -39,9 +40,16 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
         PendingIntent.getBroadcast(app.applicationContext ,0,intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
-    val reminderTitle = MutableLiveData<String>()
-    val reminderDescription = MutableLiveData<String>()
-    val reminderSelectedLocationStr = MutableLiveData<String>()
+    private var _validatedNowStartGeofence = MutableLiveData<Boolean>()
+    val validatedNowStartGeofence : LiveData<Boolean>
+    get() = _validatedNowStartGeofence
+init {
+    _validatedNowStartGeofence.value = false
+}
+
+    val reminderTitle = MutableLiveData<String?>()
+    val reminderDescription = MutableLiveData<String?>()
+    val reminderSelectedLocationStr = MutableLiveData<String?>()
     private var _selectedPOI = MutableLiveData<PointOfInterest>()
     val selectedPoi : LiveData<PointOfInterest>
     get() = _selectedPOI
@@ -83,6 +91,7 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     fun validateAndSaveReminder(reminderData: ReminderDataItem) {
         if (validateEnteredData(reminderData)) {
             saveReminder(reminderData)
+            _validatedNowStartGeofence.value = true
             addGeofencing(reminderData.id)
         }
 
@@ -150,21 +159,20 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
         }.build()
 
 
-        geofencingClient.removeGeofences(goeFencingPendingIntent)?.run {
-            addOnCompleteListener {
-                geofencingClient.addGeofences(geofencingRequest,goeFencingPendingIntent)?.run {
+        geofencingClient.addGeofences(geofencingRequest,goeFencingPendingIntent)?.run {
                     addOnSuccessListener {
                         Log.i("myTag","Success!! Geofencing Activated")
+                        showSnackBar.value = app.applicationContext.getString(R.string.successful_GeoFence_Activation_message)
                     }
                     addOnFailureListener{
                         Log.i("myTag","Failed!! Geofencing Failed")
+                        showSnackBar.value =app.applicationContext.getString(R.string.failed_Geofence_Activation_Message)
                     }
                 }
             }
 
 
-        }
+
     }
 
 
-}
