@@ -1,12 +1,14 @@
 package com.udacity.project4.locationreminders.data.local
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.core.text.isDigitsOnly
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
+import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -59,5 +61,19 @@ class RemindersLocalRepositoryTest {
         assertThat(result.id,`is`(savedReminder.id))
 
     }
+
+    @Test
+    fun noReminder_ReturnError() = runBlocking {
+        //removing all reminders
+        repository.deleteAllReminders()
+        //getting back the error as there is no reminder
+        val repoSaveReminder: Result<ReminderDTO> = repository.getReminder("1")
+        val result: String? = (repoSaveReminder as Result.Error).message
+
+        assertThat(repoSaveReminder,notNullValue())
+        assertEquals("Reminder not found!",result)
+    }
+
+
 
 }
