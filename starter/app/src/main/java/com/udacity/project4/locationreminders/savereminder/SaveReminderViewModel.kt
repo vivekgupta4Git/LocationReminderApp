@@ -63,6 +63,7 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
 
     }
 
+
     /**
      * Clear the live data objects to start fresh next time the view model gets called
      */

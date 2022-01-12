@@ -125,13 +125,10 @@ class RemindersActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
 
-        if(
-            grantResults.isEmpty() ||
-                    grantResults[0]==PackageManager.PERMISSION_DENIED ||
-            (grantResults[1] == PackageManager.PERMISSION_DENIED &&
-                    requestCode== REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
-                    )
-        )
+        if(grantResults.isEmpty()||
+            grantResults[LOCATION_PERMISSION_INDEX]== PackageManager.PERMISSION_DENIED ||
+            (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
+                    grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX]== PackageManager.PERMISSION_DENIED)   )
         {
             Snackbar.make(layout,"Permission is must",Snackbar.LENGTH_INDEFINITE )
                 .setAction("Enable"){
@@ -140,7 +137,7 @@ class RemindersActivity : AppCompatActivity() {
                         data = Uri.fromParts("package",BuildConfig.APPLICATION_ID,null)
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     })
-                }
+                }.show()
 
 
         }
@@ -148,6 +145,7 @@ class RemindersActivity : AppCompatActivity() {
         {
             checkDeviceLocationSettingsAndStartGeoFence()
         }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
     }
 
@@ -193,9 +191,12 @@ class RemindersActivity : AppCompatActivity() {
     }
 
     companion object {
-        val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 1
-        val REQUEST_FOREGROUND_ONLY_PERMISSION_REQUEST_CODE  = 2
-        val REQUEST_TURN_DEVICE_LOCATION_ON = 3
+        val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 111
+        val REQUEST_FOREGROUND_ONLY_PERMISSION_REQUEST_CODE  = 222
+        val REQUEST_TURN_DEVICE_LOCATION_ON = 333
         private const val TAG = "myTag"
+        private const val LOCATION_PERMISSION_INDEX = 0
+        private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1
+
     }
 }

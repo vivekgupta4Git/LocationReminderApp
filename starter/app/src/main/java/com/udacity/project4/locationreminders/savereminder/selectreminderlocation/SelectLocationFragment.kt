@@ -3,16 +3,21 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import android.view.*
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -20,6 +25,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
+import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.BaseViewModel
@@ -76,7 +82,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         Log.i("myTag","Selected Poi (Lat & Long ) : ${selectedPoi.name}  (${selectedPoi.latLng.latitude} , ${selectedPoi.latLng.longitude})")
        // _viewModel.showSnackBar.value = "Save Location"
 
-        Snackbar.make(requireView(), "Save Location", Snackbar.LENGTH_INDEFINITE)
+        Snackbar.make(binding.root, "Save Location", Snackbar.LENGTH_LONG)
             .setAction("Save") {
                 _viewModel.setPoi(selectedPoi)
                 _viewModel.navigationCommand.postValue(
@@ -126,20 +132,18 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
         ) {
             val permission = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION ,Manifest.permission.ACCESS_COARSE_LOCATION)
-            ActivityCompat.requestPermissions(requireActivity(),permission,REQUEST_CODE)
-            return
+            requestPermissions(permission, REQUEST_CODE)
+
         }
-        enableMyLocation()
+        else{
+            enableMyLocation()
+        }
         setMapLongClick(map)
         setPoiClickListener(map)
     }
 
-    @SuppressLint("MissingPermission")
     private fun enableMyLocation(){
         googleMap.isMyLocationEnabled = true
-
-
-
 //using fused location provider client as it efficient in terms of battery usage.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         fusedLocationProviderClient.lastLocation.addOnSuccessListener {location->
@@ -166,10 +170,49 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             if(grantResults.size>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED && grantResults[1] ==PackageManager.PERMISSION_GRANTED)
             {
                 enableMyLocation()
+            }else
+            {
+                Snackbar.make(binding.root,
+                getString(R.string.permission_denied_explanation),
+                Snackbar.LENGTH_LONG)
+                    .setAction("Enable") {
+                        startActivity(Intent().apply {
+                            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        )
+                    }.show()
+
             }
         }
 
     }
+
+    private fun setMapLongClick(map: GoogleMap) {
+
+            map.setOnMapLongClickListener { latLng ->
+                map.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+                    .title("Random Location")
+                    .snippet("${latLng.latitude},${latLng.longitude}")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+            )
+            Snackbar.make(binding.root, "Save Location", Snackbar.LENGTH_INDEFINITE)
+                .setAction("Save") {
+                    _viewModel.latitude.value = latLng.latitude
+                    _viewModel.longitude.value = latLng.longitude
+                    _viewModel.reminderSelectedLocationStr.value = "Random Location"
+                    _viewModel.navigationCommand.postValue(
+                        NavigationCommand.Back
+                    )
+                    //  fragmentManager?.popBackStack()
+                }.show()
+
+        }
+    }
+
 
 
 
@@ -199,32 +242,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }catch (e :Resources.NotFoundException)
         {
             Log.e("myMap","can't find the style. Error : ",e)
-        }
-    }
-
-
-    //this function is for testing purpose
-    @VisibleForTesting
-    private fun setMapLongClick(map: GoogleMap) {
-        map.setOnMapLongClickListener { latLng ->
-            val snippet = String.format(
-                Locale.getDefault(),
-                "Lat: %1$.5f, Long: %2$.5f",
-                latLng.latitude,
-                latLng.longitude
-            )
-
-            _viewModel.latitude.value = latLng.latitude
-            _viewModel.longitude.value = latLng.longitude
-            _viewModel.reminderSelectedLocationStr.value = "Random Location"
-
-            map.addMarker(
-                MarkerOptions()
-                    .position(latLng)
-                    .title("Random Location")
-                    .snippet(snippet)
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-            )
         }
     }
 
