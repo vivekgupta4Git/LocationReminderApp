@@ -133,8 +133,10 @@ class RemindersActivityTest :
         onView(withContentDescription("Google Map")).perform(longClick())
         onView(withId(com.google.android.material.R.id.snackbar_action)).perform(click())
         onView(withId(R.id.saveReminder)).perform(click())
-        onView(withText(R.string.reminder_saved)).inRoot(ToastMatcher()).check(matches(isDisplayed()))
-
+     //   onView(withText(R.string.reminder_saved)).inRoot(ToastMatcher()).check(matches(isDisplayed()))
+        onView(withText(R.string.reminder_saved))
+            .inRoot(withDecorView(not(getActivity(activityScenario)?.window?.decorView)))
+            .check(matches(isDisplayed()))
 
         activityScenario.close()
 
